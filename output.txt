@@ -1,0 +1,4 @@
+1A 2M
+1M 2A 1M
+impossible
+empty
