@@ -36,7 +36,7 @@ def aCm(a, m, i_l, i_h, o_l, o_h):
         return 'impossible'
     # find fastest path to output range
     lst_inp = [inputs[0]]
-    operation = []
+    operation, method = False, ''
     while not operation:
         while max(lst_inp) not in outputs:
             lst_inp = find_path(lst_inp, a, m, outputs)
@@ -46,6 +46,7 @@ def aCm(a, m, i_l, i_h, o_l, o_h):
         step = numpy.log(len(lst_inp)) / numpy.log(2)
         lst_bin = [decimal_binary(ind, step) for ind in lst_ind]
         for str_bin in lst_bin:
+            operation = True
             for inp in inputs[1:]:
                 tmp_inp = inp
                 for op in str_bin:
@@ -53,16 +54,17 @@ def aCm(a, m, i_l, i_h, o_l, o_h):
                         tmp_inp += a
                     else:
                         tmp_inp = tmp_inp * m
-                if tmp_inp in outputs:
-                    operation.append(str_bin)
-            if len(operation) == len(inputs) - 1:
+                if tmp_inp not in outputs:
+                    operation = False
+                    break
+            if operation:
+                method = str_bin
                 break
             else:
-                operation = []
                 lst_inp = find_path(lst_inp, a, m, outputs)
-    if len(operation[0]) > 1:
-        path, prev_ele = operation[0][0], operation[0][0]
-        for next_ele in operation[0][1:]:
+    if len(method) > 1:
+        path, prev_ele = method[0], method[0]
+        for next_ele in method[1:]:
             if prev_ele == next_ele:
                 path += next_ele
             else:
@@ -70,15 +72,8 @@ def aCm(a, m, i_l, i_h, o_l, o_h):
                 prev_ele = next_ele
         path = path.split(',')
     else:
-        path = [operation[0]]
-    final_path = ''
-    for p in path:
-        l = str(len(p))
-        if p[0] == '0':
-            l += 'A '
-        else:
-            l += 'M '
-        final_path += l
+        path = [method]
+    final_path = ' '.join([str(len(x)) + 'M' if '1' in x else str(len(x)) + 'A' for x in path])
     return final_path
 
 
