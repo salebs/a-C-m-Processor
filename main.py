@@ -8,12 +8,12 @@ class Node(object):
         self.weight = weight
         self.n = n
         self.steps = steps
-        self.dif_val = weight - value
+        self.upper_bound = (weight - value) * len(steps)
         self.add_rule = False
 
 
 def lt(val):
-    return val[1] * len(val[2])
+    return val[1]
 
 
 def small(lst):
@@ -31,32 +31,32 @@ def acm(a, m, i_l, i_h, o_l, o_h):
     if len([inp for inp in inputs if inp in outputs]) == len(inputs):
         return 'empty'
     # find path to output range
-    max_n, paths = math.floor(math.log((o_h - o_l) / (i_h - i_l), m)), []
-    node = Node(i_l, o_h - (i_h - i_l) * (m ** 0), 0, '')
-    nodes, cur_node, rule = [[node, node.dif_val, node.steps]], node, [0]
+    max_n = math.floor(math.log((o_h - o_l) / (i_h - i_l), m))
+    cur_node = Node(i_l, o_h - (i_h - i_l), 0, '')
+    nodes, rule, paths = [], True, []
     while rule:
-        if paths:
-            rule = [n for n in nodes if len(n[2]) < min([len(path) for path in paths])]
-        nodes = [n for n in nodes if n[0].steps != '']
-        add_node = Node(cur_node.value + a, cur_node.weight, cur_node.n, cur_node.steps + '0')
         if o_l <= cur_node.value <= cur_node.weight:
             paths.append(cur_node.steps)
         else:
             if not cur_node.add_rule:
-                if add_node.dif_val >= 0:
-                    nodes.append([add_node, add_node.dif_val, add_node.steps])
+                add_node = Node(cur_node.value + a, cur_node.weight, cur_node.n, cur_node.steps + '0')
+                if add_node.upper_bound >= 0:
+                    nodes.append([add_node, add_node.upper_bound])
                 if cur_node.n < max_n:
                     mul_node = Node(cur_node.value * m, o_h - (i_h - i_l) * (m ** (cur_node.n + 1)), cur_node.n + 1,
                                     cur_node.steps + '1')
-                    if mul_node.dif_val < 0:
+                    if mul_node.upper_bound < 0:
                         add_node.add_rule = True
                     elif mul_node.n == max_n:
-                        mul_node.add_rule = True
-                    if mul_node.n <= max_n and mul_node.dif_val >= 0:
-                        nodes.append([mul_node, mul_node.dif_val, mul_node.steps])
+                        if mul_node.value + math.ceil((o_l - mul_node.value) / a) * a <= mul_node.weight:
+                            paths.append(mul_node.steps + f'{"0" * math.ceil((o_l - mul_node.value) / a)}')
+                    else:
+                        nodes.append([mul_node, mul_node.upper_bound])
             else:
                 if cur_node.value + math.ceil((o_l - cur_node.value) / a) * a <= cur_node.weight:
                     paths.append(cur_node.steps + f'{"0" * math.ceil((o_l - cur_node.value) / a)}')
+        if paths:
+            rule = bool([n for n in nodes if len(n[0].steps) < min([len(path) for path in paths]) - 1])
         if nodes:
             nodes.sort(key=lt)
             cur_node = nodes.pop(0)[0]
